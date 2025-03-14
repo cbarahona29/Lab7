@@ -8,7 +8,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class Main {
@@ -16,6 +19,7 @@ public class Main {
     private CardLayout cardLayout;
     private JPanel panelPrincipal;
     private JPanel panelLogin;
+    private JPanel panelRegistro;
     private JPanel panelAdmin;
     private JPanel panelUsuario;
     
@@ -47,9 +51,11 @@ public class Main {
         cardLayout = new CardLayout();
         panelPrincipal = new JPanel(cardLayout);
         panelLogin = crearPanelLogin();
+        panelRegistro = crearPanelRegistro();
         panelAdmin = crearPanelAdmin();
         panelUsuario = crearPanelUsuario();
         panelPrincipal.add(panelLogin, "login");
+        panelPrincipal.add(panelRegistro, "registro");
         panelPrincipal.add(panelAdmin, "admin");
         panelPrincipal.add(panelUsuario, "usuario");
         frame.add(panelPrincipal);
@@ -65,6 +71,7 @@ public class Main {
         JTextField txtUser = new JTextField(15);
         JPasswordField txtPass = new JPasswordField(15);
         JButton btnLogin = new JButton("Iniciar Sesión");
+        JButton btnCrearCuenta = new JButton("Crear Cuenta");
         JLabel lblMensaje = new JLabel("");
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.gridx = 0; gbc.gridy = 0;
@@ -78,6 +85,8 @@ public class Main {
         gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
         panel.add(btnLogin, gbc);
         gbc.gridy = 3;
+        panel.add(btnCrearCuenta, gbc);
+        gbc.gridy = 4;
         panel.add(lblMensaje, gbc);
         btnLogin.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -107,6 +116,77 @@ public class Main {
                     lblMensaje.setText("Error en lectura de datos");
                     ex.printStackTrace();
                 }
+            }
+        });
+        btnCrearCuenta.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(panelPrincipal, "registro");
+            }
+        });
+        return panel;
+    }
+    
+    private JPanel crearPanelRegistro() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        JLabel lblUser = new JLabel("Username:");
+        JLabel lblPass = new JLabel("Password:");
+        JLabel lblNombre = new JLabel("Nombre:");
+        JLabel lblFecha = new JLabel("Fecha de Nacimiento (dd/MM/yyyy):");
+        JTextField txtUser = new JTextField(15);
+        JPasswordField txtPass = new JPasswordField(15);
+        JTextField txtNombre = new JTextField(15);
+        JTextField txtFecha = new JTextField(15);
+        JButton btnRegistrar = new JButton("Registrarse");
+        JButton btnVolver = new JButton("Volver");
+        JLabel lblMensaje = new JLabel("");
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(lblUser, gbc);
+        gbc.gridx = 1;
+        panel.add(txtUser, gbc);
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(lblPass, gbc);
+        gbc.gridx = 1;
+        panel.add(txtPass, gbc);
+        gbc.gridx = 0; gbc.gridy = 2;
+        panel.add(lblNombre, gbc);
+        gbc.gridx = 1;
+        panel.add(txtNombre, gbc);
+        gbc.gridx = 0; gbc.gridy = 3;
+        panel.add(lblFecha, gbc);
+        gbc.gridx = 1;
+        panel.add(txtFecha, gbc);
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
+        panel.add(btnRegistrar, gbc);
+        gbc.gridy = 5;
+        panel.add(btnVolver, gbc);
+        gbc.gridy = 6;
+        panel.add(lblMensaje, gbc);
+        btnRegistrar.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String username = txtUser.getText().trim();
+                String password = new String(txtPass.getPassword()).trim();
+                String nombre = txtNombre.getText().trim();
+                String fechaStr = txtFecha.getText().trim();
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                try {
+                    Date fechaDate = sdf.parse(fechaStr);
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(fechaDate);
+                    steam.addPlayer(username, password, nombre, cal, "", "normal");
+                    lblMensaje.setText("Cuenta creada exitosamente");
+                } catch (ParseException pe) {
+                    lblMensaje.setText("Formato de fecha incorrecto");
+                } catch (IOException ex) {
+                    lblMensaje.setText("Error al crear cuenta");
+                    ex.printStackTrace();
+                }
+            }
+        });
+        btnVolver.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                cardLayout.show(panelPrincipal, "login");
             }
         });
         return panel;
@@ -291,7 +371,7 @@ public class Main {
         return panel;
     }
     
-    public static void main(String[] args) {
+    public static void main(String[] args) { 
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new Main();

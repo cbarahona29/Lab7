@@ -214,11 +214,12 @@ public class Steam {
     }
     
     public void addPlayer(String username, String password, String nombre, Calendar nacimiento, String rutaImagen, String tipoUsuario) throws IOException {
+        List<Jugador> lista = leerTodosLosJugadores();
         int codigo = obtenerSiguienteCodigo("player");
         long fechaNacimiento = nacimiento.getTimeInMillis();
         Jugador nuevoJugador = new Jugador(codigo, username, password, nombre, fechaNacimiento, 0, rutaImagen, tipoUsuario);
-        rafPlayers.seek(rafPlayers.length());
-        nuevoJugador.escribir(rafPlayers);
+        lista.add(nuevoJugador);
+        escribirTodosLosJugadores(lista);
     }
     
     public boolean downloadGame(int codigoJuego, int codigoCliente, char soCliente) throws IOException {
@@ -315,7 +316,17 @@ public class Steam {
         }
         FileWriter fw = new FileWriter(nombreArchivoTxt, false);
         PrintWriter pw = new PrintWriter(fw);
-        pw.println(jugadorReporte.toString());
+        pw.println("----- REPORTE DEL CLIENTE -----");
+        pw.println("Código: " + jugadorReporte.codigo);
+        pw.println("Username: " + jugadorReporte.username);
+        pw.println("Password: " + jugadorReporte.password);
+        pw.println("Nombre: " + jugadorReporte.nombre);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        String fechaNacimiento = sdf.format(new Date(jugadorReporte.nacimiento));
+        pw.println("Fecha de Nacimiento: " + fechaNacimiento);
+        pw.println("Contador de Downloads: " + jugadorReporte.contadorDownloads);
+        pw.println("Ruta de Imagen: " + jugadorReporte.rutaImagen);
+        pw.println("Tipo de Usuario: " + jugadorReporte.tipoUsuario);
         pw.close();
         return "REPORTE CREADO";
     }
