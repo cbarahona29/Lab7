@@ -337,4 +337,27 @@ public class Steam {
             System.out.println(j.toString());
         }
     }
+    public boolean deleteGame(int codigoJuego) throws IOException {
+    List<Juego> listaJuegos = leerTodosLosJuegos();
+    boolean gameFound = false;
+    
+    // Create a new list excluding the game to delete
+    List<Juego> nuevaLista = new ArrayList<>();
+    for (Juego j : listaJuegos) {
+        if (j.codigo != codigoJuego) {
+            nuevaLista.add(j);
+        } else {
+            gameFound = true;
+        }
+    }
+    
+    // Only update the file if the game was found
+    if (gameFound) {
+        escribirTodosLosJuegos(nuevaLista);
+        return true;
+    }
+    
+    return false;
+}
+    
 }
