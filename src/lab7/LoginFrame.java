@@ -235,7 +235,7 @@ public class LoginFrame extends JFrame {
         });
         
         return panel;
-    }
+    } 
     
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
