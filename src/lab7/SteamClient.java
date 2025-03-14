@@ -1,5 +1,4 @@
 package lab7;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -8,7 +7,7 @@ import java.util.List;
 
 public class SteamClient extends JFrame implements ActionListener {
     private JButton viewCatalogButton;
-    private JButton viewLibraryButton;  // Nuevo botón
+    private JButton viewLibraryButton;
     private JButton viewProfileButton;
     private JButton logoutButton;
     
@@ -31,7 +30,7 @@ public class SteamClient extends JFrame implements ActionListener {
         viewCatalogButton.addActionListener(this);
         this.add(viewCatalogButton);
         
-        viewLibraryButton = new JButton("2. Ver Biblioteca");  // Cambiado
+        viewLibraryButton = new JButton("2. Ver Biblioteca");
         viewLibraryButton.setBounds(100, 110, 200, 40);
         viewLibraryButton.addActionListener(this);
         this.add(viewLibraryButton);
@@ -50,11 +49,25 @@ public class SteamClient extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == viewCatalogButton) {
-            CatalogoJuegos catalogo = new CatalogoJuegos(steam);
-            catalogo.setVisible(true);
+            try {
+                CatalogoJuegos catalogo = new CatalogoJuegos(steam);
+                catalogo.setVisible(true);
+            } catch (Exception ex) {
+                System.out.println("Error al abrir catálogo: " + ex.getMessage());
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error al abrir el catálogo: " + ex.getMessage(),
+                                             "Error", JOptionPane.ERROR_MESSAGE);
+            }
         } else if (e.getSource() == viewLibraryButton) {
-            Biblioteca biblioteca = new Biblioteca(steam, currentUser);
-            biblioteca.setVisible(true);
+            try {
+                Biblioteca biblioteca = new Biblioteca(steam, currentUser.codigo);
+                biblioteca.setVisible(true);
+            } catch (Exception ex) {
+                System.out.println("Error al abrir biblioteca: " + ex.getMessage());
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error al abrir la biblioteca: " + ex.getMessage(),
+                                             "Error", JOptionPane.ERROR_MESSAGE);
+            }
         } else if (e.getSource() == viewProfileButton) {
             viewProfile();
         } else if (e.getSource() == logoutButton) {

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package lab7;
 
 import java.io.*;
@@ -39,7 +35,14 @@ public class Steam {
             e.printStackTrace();
         }
     }
-    
+    private void crearCarpetasUsuario(String username) {
+    File userFolder = new File("steam/" + username);
+    if (!userFolder.exists()) {
+        boolean creado = userFolder.mkdirs();
+        System.out.println("Carpeta creada: " + creado + " - " + userFolder.getAbsolutePath());
+    }
+}
+
     public int obtenerSiguienteCodigo(String tipo) throws IOException {
         int codigo = 0;
         if (tipo.equalsIgnoreCase("game")) {
@@ -162,6 +165,11 @@ public class Steam {
             Date fecha = new Date(nacimiento);
             return "Código: " + codigo + ", Username: " + username + ", Nombre: " + nombre + ", Nacimiento: " + fecha + ", Descargas: " + contadorDownloads + ", Imagen: " + rutaImagen + ", Tipo: " + tipoUsuario;
         }
+        
+        // Método para obtener la ruta de la carpeta del usuario
+        public String getUserFolderPath() {
+            return "steam/" + username;
+        }
     }
     
     public List<Juego> leerTodosLosJuegos() throws IOException {
@@ -206,6 +214,23 @@ public class Steam {
         }
     }
     
+    private void guardarInfoUsuario(Jugador player) throws IOException {
+        String userFolder = "steam/" + player.username;
+        
+        FileWriter fw = new FileWriter(userFolder + "/profile.txt", false);
+        PrintWriter pw = new PrintWriter(fw);
+        pw.println("Código: " + player.codigo);
+        pw.println("Username: " + player.username);
+        pw.println("Password: " + player.password);
+        pw.println("Nombre: " + player.nombre);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        String fechaNacimiento = sdf.format(new Date(player.nacimiento));
+        pw.println("Fecha de Nacimiento: " + fechaNacimiento);
+        pw.println("Descargas Totales: " + player.contadorDownloads);
+        pw.println("Tipo de Usuario: " + player.tipoUsuario);
+        pw.close();
+    }
+    
     public void addGame(String titulo, char so, int edadMinima, double precio, String rutaImagen) throws IOException {
         int codigo = obtenerSiguienteCodigo("game");
         Juego nuevoJuego = new Juego(codigo, titulo, so, edadMinima, precio, 0, rutaImagen);
@@ -220,6 +245,10 @@ public class Steam {
         Jugador nuevoJugador = new Jugador(codigo, username, password, nombre, fechaNacimiento, 0, rutaImagen, tipoUsuario);
         lista.add(nuevoJugador);
         escribirTodosLosJugadores(lista);
+        
+        // Crear carpeta del usuario y guardar su información
+        crearCarpetasUsuario(username);
+        guardarInfoUsuario(nuevoJugador);
     }
     
     public boolean downloadGame(int codigoJuego, int codigoCliente, char soCliente) throws IOException {
@@ -234,6 +263,7 @@ public class Steam {
         if (juegoSeleccionado == null) {
             return false;
         }
+        
         List<Jugador> listaJugadores = leerTodosLosJugadores();
         Jugador jugadorSeleccionado = null;
         for (Jugador p : listaJugadores) {
@@ -245,9 +275,11 @@ public class Steam {
         if (jugadorSeleccionado == null) {
             return false;
         }
+        
         if (Character.toUpperCase(juegoSeleccionado.so) != Character.toUpperCase(soCliente)) {
             return false;
         }
+        
         long hoy = System.currentTimeMillis();
         long diferencia = hoy - jugadorSeleccionado.nacimiento;
         Calendar cal = Calendar.getInstance();
@@ -256,20 +288,53 @@ public class Steam {
         if (edad < juegoSeleccionado.edadMinima) {
             return false;
         }
+        
         int codigoDownload = obtenerSiguienteCodigo("download");
-        String nombreArchivo = "steam/downloads/download_" + codigoDownload + ".stm";
-        FileWriter fw = new FileWriter(nombreArchivo, false);
-        PrintWriter pw = new PrintWriter(fw);
+        
+        // Guardar en la carpeta global de descargas
+        String nombreArchivoGlobal = "steam/downloads/download_" + codigoDownload + ".stm";
+        FileWriter fwGlobal = new FileWriter(nombreArchivoGlobal, false);
+        PrintWriter pwGlobal = new PrintWriter(fwGlobal);
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         String fechaDescarga = sdf.format(new Date());
-        pw.println(fechaDescarga);
-        pw.println("IMAGE GAME: " + juegoSeleccionado.rutaImagen);
-        pw.println();
-        pw.println("Download #" + codigoDownload);
-        pw.println(jugadorSeleccionado.nombre + " ha bajado " + juegoSeleccionado.titulo + " a un precio de $ " + juegoSeleccionado.precio);
-        pw.close();
+        pwGlobal.println(fechaDescarga);
+        pwGlobal.println("IMAGE GAME: " + juegoSeleccionado.rutaImagen);
+        pwGlobal.println();
+        pwGlobal.println("Download #" + codigoDownload);
+        pwGlobal.println(jugadorSeleccionado.nombre + " ha bajado " + juegoSeleccionado.titulo + " a un precio de $ " + juegoSeleccionado.precio);
+        pwGlobal.close();
+        
+        // Guardar en la carpeta personal del usuario
+        String userDownloadPath = "steam/" + jugadorSeleccionado.username + "/downloads";
+        String nombreArchivoUsuario = userDownloadPath + "/download_" + codigoDownload + ".stm";
+        FileWriter fwUsuario = new FileWriter(nombreArchivoUsuario, false);
+        PrintWriter pwUsuario = new PrintWriter(fwUsuario);
+        pwUsuario.println(fechaDescarga);
+        pwUsuario.println("IMAGE GAME: " + juegoSeleccionado.rutaImagen);
+        pwUsuario.println();
+        pwUsuario.println("Download #" + codigoDownload);
+        pwUsuario.println("Has descargado " + juegoSeleccionado.titulo + " a un precio de $ " + juegoSeleccionado.precio);
+        pwUsuario.close();
+        
+        // Registrar el juego en la biblioteca del usuario
+        String userGamesPath = "steam/" + jugadorSeleccionado.username + "/games";
+        String gameFilePath = userGamesPath + "/game_" + juegoSeleccionado.codigo + ".txt";
+        FileWriter fwGame = new FileWriter(gameFilePath, false);
+        PrintWriter pwGame = new PrintWriter(fwGame);
+        pwGame.println("Código: " + juegoSeleccionado.codigo);
+        pwGame.println("Título: " + juegoSeleccionado.titulo);
+        pwGame.println("Sistema Operativo: " + juegoSeleccionado.so);
+        pwGame.println("Edad Mínima: " + juegoSeleccionado.edadMinima);
+       pwGame.println("Precio pagado: $" + juegoSeleccionado.precio);
+        pwGame.println("Fecha de compra: " + fechaDescarga);
+        pwGame.println("Ruta imagen: " + juegoSeleccionado.rutaImagen);
+        pwGame.close();
+        
+        // Actualizar contadores
         juegoSeleccionado.contadorDownloads++;
         jugadorSeleccionado.contadorDownloads++;
+        
+        // Actualizar en las listas
         for (int i = 0; i < listaJuegos.size(); i++) {
             if (listaJuegos.get(i).codigo == juegoSeleccionado.codigo) {
                 listaJuegos.set(i, juegoSeleccionado);
@@ -277,6 +342,7 @@ public class Steam {
             }
         }
         escribirTodosLosJuegos(listaJuegos);
+        
         for (int i = 0; i < listaJugadores.size(); i++) {
             if (listaJugadores.get(i).codigo == jugadorSeleccionado.codigo) {
                 listaJugadores.set(i, jugadorSeleccionado);
@@ -284,6 +350,10 @@ public class Steam {
             }
         }
         escribirTodosLosJugadores(listaJugadores);
+        
+        // Actualizar el archivo de perfil del usuario
+        guardarInfoUsuario(jugadorSeleccionado);
+        
         return true;
     }
     
@@ -314,6 +384,7 @@ public class Steam {
         if (jugadorReporte == null) {
             return "NO SE PUEDE CREAR REPORTE";
         }
+        
         FileWriter fw = new FileWriter(nombreArchivoTxt, false);
         PrintWriter pw = new PrintWriter(fw);
         pw.println("----- REPORTE DEL CLIENTE -----");
@@ -327,6 +398,27 @@ public class Steam {
         pw.println("Contador de Downloads: " + jugadorReporte.contadorDownloads);
         pw.println("Ruta de Imagen: " + jugadorReporte.rutaImagen);
         pw.println("Tipo de Usuario: " + jugadorReporte.tipoUsuario);
+        
+        // Listar juegos del usuario
+        File userGamesFolder = new File("steam/" + jugadorReporte.username + "/games");
+        if (userGamesFolder.exists()) {
+            pw.println("\n----- JUEGOS DEL USUARIO -----");
+            File[] gameFiles = userGamesFolder.listFiles();
+            if (gameFiles != null && gameFiles.length > 0) {
+                for (File gameFile : gameFiles) {
+                    BufferedReader br = new BufferedReader(new FileReader(gameFile));
+                    String line;
+                    pw.println("\nJuego: " + gameFile.getName());
+                    while ((line = br.readLine()) != null) {
+                        pw.println("  " + line);
+                    }
+                    br.close();
+                }
+            } else {
+                pw.println("El usuario no tiene juegos.");
+            }
+        }
+        
         pw.close();
         return "REPORTE CREADO";
     }
@@ -337,27 +429,105 @@ public class Steam {
             System.out.println(j.toString());
         }
     }
-    public boolean deleteGame(int codigoJuego) throws IOException {
-    List<Juego> listaJuegos = leerTodosLosJuegos();
-    boolean gameFound = false;
     
-    // Create a new list excluding the game to delete
-    List<Juego> nuevaLista = new ArrayList<>();
-    for (Juego j : listaJuegos) {
-        if (j.codigo != codigoJuego) {
-            nuevaLista.add(j);
-        } else {
-            gameFound = true;
+    public boolean deleteGame(int codigoJuego) throws IOException {
+        List<Juego> listaJuegos = leerTodosLosJuegos();
+        boolean gameFound = false;
+        
+        // Create a new list excluding the game to delete
+        List<Juego> nuevaLista = new ArrayList<>();
+        for (Juego j : listaJuegos) {
+            if (j.codigo != codigoJuego) {
+                nuevaLista.add(j);
+            } else {
+                gameFound = true;
+            }
+        }
+        
+        if (gameFound) {
+            escribirTodosLosJuegos(nuevaLista);
+            return true;
+        }
+        
+        return false;
+    }
+    public List<Object> leerTodasLasDescargas() throws IOException {
+    List<Object> lista = new ArrayList<>();
+    File downloadsFolder = new File("steam/downloads");
+    
+    if (downloadsFolder.exists() && downloadsFolder.isDirectory()) {
+        File[] downloadFiles = downloadsFolder.listFiles((dir, name) -> name.startsWith("download_") && name.endsWith(".stm"));
+        
+        if (downloadFiles != null) {
+            for (File file : downloadFiles) {
+                try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                    // Extract download code from filename (download_X.stm)
+                    String filename = file.getName();
+                    int codeStart = filename.indexOf("_") + 1;
+                    int codeEnd = filename.indexOf(".stm");
+                    int downloadCode = Integer.parseInt(filename.substring(codeStart, codeEnd));
+                    
+                    // Read download details
+                    String fechaDescarga = br.readLine(); // First line is the date
+                    String imagenLinea = br.readLine(); // Second line has image info
+                    
+                    br.readLine(); // Empty line
+                    String downloadLine = br.readLine(); // "Download #X"
+                    String detailsLine = br.readLine(); // Details line
+                    
+                    // Parse details line to extract player and game info
+                    // Format: "{playerName} ha bajado {gameTitle} a un precio de $ {price}"
+                    if (detailsLine.contains(" ha bajado ")) {
+                        String[] parts = detailsLine.split(" ha bajado ");
+                        String playerName = parts[0];
+                        
+                        // Find player by name
+                        List<Jugador> jugadores = leerTodosLosJugadores();
+                        int jugadorId = -1;
+                        for (Jugador j : jugadores) {
+                            if (j.nombre.equals(playerName)) {
+                                jugadorId = j.codigo;
+                                break;
+                            }
+                        }
+                        
+                        // Extract game title and find game by title
+                        String[] gameParts = parts[1].split(" a un precio de \\$ ");
+                        String gameTitle = gameParts[0];
+                        
+                        List<Juego> juegos = leerTodosLosJuegos();
+                        int codigoJuego = -1;
+                        for (Juego j : juegos) {
+                            if (j.titulo.equals(gameTitle)) {
+                                codigoJuego = j.codigo;
+                                break;
+                            }
+                        }
+                        
+                        // Create an anonymous class instance with the required fields
+                        final int finalJugadorId = jugadorId;
+                        final int finalCodigoJuego = codigoJuego;
+                        final int finalDownloadCode = downloadCode;
+                        final String finalFechaDescarga = fechaDescarga;
+                        
+                        Object downloadObj = new Object() {
+                            public final int codigo = finalDownloadCode;
+                            public final int jugadorId = finalJugadorId;
+                            public final int codigoJuego = finalCodigoJuego;
+                            public final String fecha = finalFechaDescarga;
+                        };
+                        
+                        // Add to list
+                        lista.add(downloadObj);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error reading download file " + file.getName() + ": " + e.getMessage());
+                }
+            }
         }
     }
     
-    // Only update the file if the game was found
-    if (gameFound) {
-        escribirTodosLosJuegos(nuevaLista);
-        return true;
-    }
-    
-    return false;
+    return lista;
 }
     
 }

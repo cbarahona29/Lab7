@@ -18,6 +18,19 @@ public class SteamAdmin extends JFrame implements ActionListener {
     private JButton viewGamesButton;
     private JButton logoutButton;
     
+    // Array de rutas a las imágenes disponibles
+    private final String[] availableImages = {
+        "/images/1.png",
+        "/images/2.png",
+        "/images/3.png",
+        "/images/4.png",
+        "/images/5.png",
+        "/images/6.png",
+        "/images/7.png",
+        "/images/8.png"
+
+    };
+    
     public SteamAdmin(Steam steam, Steam.Jugador admin) {
         super("Panel de Administrador - " + admin.username);
         this.steam = steam;
@@ -83,29 +96,81 @@ public class SteamAdmin extends JFrame implements ActionListener {
         JTextField osField = new JTextField();
         JTextField ageField = new JTextField();
         JTextField priceField = new JTextField();
-        JTextField imageField = new JTextField();
+        
+        // Crear un combo box para seleccionar imágenes
+        JComboBox<String> imageComboBox = new JComboBox<>();
+        imageComboBox.addItem("Seleccione una imagen");
+        for (int i = 0; i < availableImages.length; i++) {
+            imageComboBox.addItem("Imagen " + (i + 1));
+        }
+        
+        // Panel para mostrar vista previa de la imagen seleccionada
+        JPanel previewPanel = new JPanel();
+        previewPanel.setPreferredSize(new Dimension(150, 80));
+        previewPanel.setBorder(BorderFactory.createTitledBorder("Vista Previa"));
+        JLabel previewLabel = new JLabel("Seleccione una imagen", JLabel.CENTER);
+        previewPanel.add(previewLabel);
+        
+        // Escuchar cambios en la selección de imágenes
+        imageComboBox.addActionListener(e -> {
+            int selectedIndex = imageComboBox.getSelectedIndex();
+            if (selectedIndex > 0) {
+                // Mostrar vista previa de la imagen seleccionada
+                try {
+                    ImageIcon icon = new ImageIcon(getClass().getResource(availableImages[selectedIndex - 1]));
+                    Image img = icon.getImage().getScaledInstance(120, 60, Image.SCALE_SMOOTH);
+                    previewLabel.setIcon(new ImageIcon(img));
+                    previewLabel.setText("");
+                } catch (Exception ex) {
+                    previewLabel.setIcon(null);
+                    previewLabel.setText("No se pudo cargar la imagen");
+                }
+            } else {
+                previewLabel.setIcon(null);
+                previewLabel.setText("Seleccione una imagen");
+            }
+        });
+        
+        // Panel combinado para selector y vista previa
+        JPanel imagePanel = new JPanel(new BorderLayout());
+        imagePanel.add(imageComboBox, BorderLayout.NORTH);
+        imagePanel.add(previewPanel, BorderLayout.CENTER);
         
         Object[] inputs = {
             "Título:", titleField,
             "Sistema Operativo (W/M/L):", osField,
             "Edad Mínima:", ageField,
             "Precio:", priceField,
-            "Ruta Imagen:", imageField
+            "Imagen:", imagePanel
         };
         
         int result = JOptionPane.showConfirmDialog(this, inputs, "Agregar Juego", JOptionPane.OK_CANCEL_OPTION);
         if (result == JOptionPane.OK_OPTION) {
             try {
                 String title = titleField.getText().trim();
-                char os = osField.getText().trim().charAt(0);
+                char os = osField.getText().trim().toUpperCase().charAt(0);
                 int minAge = Integer.parseInt(ageField.getText().trim());
                 double price = Double.parseDouble(priceField.getText().trim());
-                String imagePath = imageField.getText().trim();
+                
+                // Obtener la ruta de la imagen seleccionada
+                int selectedImageIndex = imageComboBox.getSelectedIndex();
+                String imagePath;
+                
+                if (selectedImageIndex > 0) {
+                    imagePath = availableImages[selectedImageIndex - 1];
+                } else {
+                    // Imagen por defecto si no seleccionó ninguna
+                    imagePath = availableImages[0];
+                }
                 
                 steam.addGame(title, os, minAge, price, imagePath);
                 JOptionPane.showMessageDialog(this, "Juego agregado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Error: Verifique que la edad y el precio sean números válidos.", 
+                    "Error de Entrada", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error al agregar juego: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error al agregar juego: " + ex.getMessage(), 
+                    "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

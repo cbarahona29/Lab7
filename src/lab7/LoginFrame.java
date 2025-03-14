@@ -22,7 +22,6 @@ public class LoginFrame extends JFrame {
         super("Steam Login");
         this.steam = steam;
         
-        // Initialize admin if not exists
         try {
             List<Steam.Jugador> players = steam.leerTodosLosJugadores();
             boolean adminExists = false;
@@ -203,13 +202,11 @@ public class LoginFrame extends JFrame {
                     steam.addPlayer(username, password, name, cal, "", "normal");
                     messageLabel.setText("Cuenta creada exitosamente");
                     
-                    // Clear fields
                     userField.setText("");
                     passField.setText("");
                     nameField.setText("");
                     dateField.setText("");
                     
-                    // Return to login panel after short delay
                     Timer timer = new Timer(2000, new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -237,12 +234,6 @@ public class LoginFrame extends JFrame {
         return panel;
     } 
     
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                Steam steam = new Steam();
-                new LoginFrame(steam).setVisible(true);
-            }
-        });
-    }
+  
+    
 }
