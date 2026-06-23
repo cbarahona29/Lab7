@@ -475,8 +475,7 @@ public class Steam {
                     String downloadLine = br.readLine(); // "Download #X"
                     String detailsLine = br.readLine(); // Details line
                     
-                    // Parse details line to extract player and game info
-                    // Format: "{playerName} ha bajado {gameTitle} a un precio de $ {price}"
+                   
                     if (detailsLine.contains(" ha bajado ")) {
                         String[] parts = detailsLine.split(" ha bajado ");
                         String playerName = parts[0];
